@@ -90,11 +90,14 @@ with tab3:
     st.write("Model B3: Linear Regression dengan fitur indeks harga bulan ini, UMP, dan cluster provinsi.")
     pilih = st.selectbox("Pilih provinsi", sorted(prov.provinsi))
     row = pred[pred.provinsi == pilih].iloc[0]
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Cluster", names[int(row.cluster)].split(":")[0])
-    c2.metric("UMP 2024", f"Rp{row.ump:,.0f}".replace(",", "."))
-    c3.metric("Indeks Des 2024", f"{row.indeks_harga:.1f}")
-    c4.metric("Prediksi Jan 2025", f"{row.prediksi_bulan_depan:.1f}", f"{row.perubahan:+.2f}")
+    cl_name = names[int(row.cluster)]
+    st.markdown(f"**Cluster:** {cl_name}")
+    a1, a2 = st.columns(2)
+    a1.metric("UMP 2024", f"Rp{row.ump:,.0f}".replace(",", "."))
+    a2.metric("Indeks Des 2024", f"{row.indeks_harga:.1f}")
+    b1, b2 = st.columns(2)
+    b1.metric("Prediksi Jan 2025", f"{row.prediksi_bulan_depan:.1f}", f"{row.perubahan:+.2f}")
+    b2.metric("Selisih dari rata-rata nasional", f"{row.prediksi_bulan_depan - 100:+.1f}")
 
     h = wfull[wfull.provinsi == pilih].sort_values("bulan")
     fig, ax = plt.subplots(figsize=(8, 4))
@@ -134,6 +137,11 @@ with tab4:
     st.subheader("Evaluasi Linear Regression (split waktu)")
     st.write("Data latih: pasangan bulan Jul-Sep ke bulan berikutnya. Data uji: Okt-Nov ke bulan berikutnya.")
     st.dataframe(res.round(3), use_container_width=True)
-    st.warning("Model B3 (R2 0,939) lebih baik dari B1 dan B2, tetapi belum mengalahkan baseline naif "
-               "(menganggap harga bulan depan = bulan ini, R2 0,968). Harga antarbulan sangat stabil, "
-               "dan data hanya 6 bulan, sehingga prediksi ini bersifat indikatif, bukan peramalan andal.")
+    r3 = res.loc["B3: Indeks + UMP + cluster", "R2"]
+    rb = res.loc["Baseline naif (bulan depan = bulan ini)", "R2"]
+    teks = (f"Dengan k = {k}, Model B3 memiliki R2 {r3:.3f}. ")
+    if rb > r3:
+        teks += (f"Model ini belum mengalahkan baseline naif (harga bulan depan = bulan ini, R2 {rb:.3f}). ")
+    teks += ("Harga antarbulan sangat stabil dan data hanya 6 bulan, sehingga prediksi ini bersifat "
+             "indikatif, bukan peramalan andal. Hasil analisis utama menggunakan k = 3.")
+    st.warning(teks)

@@ -14,9 +14,17 @@ NON_FEATURE = {"provinsi", "bulan", "indeks_harga", "ump", "kode_provinsi",
                "cluster", "indeks_next"}
 
 
+def _csv(name):
+    """Cari CSV di folder yang sama atau di subfolder data/."""
+    for p in (os.path.join(BASE, name), os.path.join(BASE, "data", name)):
+        if os.path.exists(p):
+            return p
+    raise FileNotFoundError(name)
+
+
 def load_data():
-    prov = pd.read_csv(os.path.join(BASE, "data", "data_provinsi_bersih.csv"))
-    panel = pd.read_csv(os.path.join(BASE, "data", "panel_provinsi_bulan_bersih.csv"))
+    prov = pd.read_csv(_csv("data_provinsi_bersih.csv"))
+    panel = pd.read_csv(_csv("panel_provinsi_bulan_bersih.csv"))
     komoditas = [c for c in prov.columns if c not in NON_FEATURE]
     return prov, panel, komoditas
 

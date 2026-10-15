@@ -73,9 +73,9 @@ def _metrics(y, p):
 def _design(df, use_ump=True, use_cluster=True, cols=None):
     X = df[["indeks_harga"]].copy()
     if use_ump:
-        X["ump"] = df["ump"]
+        X["ump"] = df["ump"] / 1e6  # skala juta rupiah (stabil secara numerik)
     if use_cluster:
-        for c in sorted(df["cluster"].unique()):
+        for c in sorted(df["cluster"].unique())[1:]:  # cluster terendah = acuan
             X[f"cluster_{c}"] = (df["cluster"] == c).astype(float)
     if cols is not None:
         X = X.reindex(columns=cols, fill_value=0.0)
@@ -101,8 +101,8 @@ def run_regression(panel, prov_clustered):
         p = m.predict(_design(test, u, c, Xtr.columns))
         results[name] = _metrics(test.indeks_next, p)
     # model B1: UMP saja
-    m1 = LinearRegression().fit(train[["ump"]], train.indeks_next)
-    results["B1: UMP saja"] = _metrics(test.indeks_next, m1.predict(test[["ump"]]))
+    m1 = LinearRegression().fit(train[["ump"]] / 1e6, train.indeks_next)
+    results["B1: UMP saja"] = _metrics(test.indeks_next, m1.predict(test[["ump"]] / 1e6))
     res = pd.DataFrame(results).T.loc[
         ["B1: UMP saja", "B2: Indeks bulan ini", "B3: Indeks + UMP + cluster",
          "Baseline naif (bulan depan = bulan ini)"]]
